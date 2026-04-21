@@ -35,7 +35,7 @@ POWERUP_TTL = 8.0  # Tempo de vida do power-up antes de desaparecer
 POWERUP_TYPES = {
     "triple_shot": {"color": (0, 255, 0)},  # Verde
     "time_stop": {"color": (0, 255, 255)},  # Ciano  
-    # Próximo powerup
+    "extra_life": {"color": (255, 215, 0)},
 }
 
 AST_VEL_MIN = 30.0

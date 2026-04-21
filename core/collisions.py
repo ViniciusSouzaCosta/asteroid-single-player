@@ -20,7 +20,7 @@ class CollisionResult:
     asteroids_to_spawn: list[tuple[Vec, Vec, str]] = field(default_factory=list)
     powerups_to_spawn: list[tuple[Vec, str]] = field(default_factory=list)
     time_stop_activated: bool = False
-
+    extra_life_pickups: list[PlayerId] = field(default_factory=list)
 
 class CollisionManager:
     """Resolves all collisions between game entities."""
@@ -161,8 +161,8 @@ class CollisionManager:
 
         if ast.size == "L" and random() <= C.POWERUP_CHANCE:
             """Randomizes which powerup will be dropped"""
-            powerup_tipo = choice(["triple_shot", "time_stop"])
-            result.powerups_to_spawn.append((Vec(ast.pos), powerup_tipo))
+            powerup_type = choice(["triple_shot", "time_stop", "extra_life"])
+            result.powerups_to_spawn.append((Vec(ast.pos), powerup_type))
 
         split = C.AST_SIZES[ast.size]["split"]
         pos = Vec(ast.pos)
@@ -184,17 +184,15 @@ class CollisionManager:
         """Detecta quando uma nave coleta um power-up."""
         for ship in ships.values():
             for powerup in list(powerups):
-                # Verifica colisão entre a nave e o power-up
                 distance = (powerup.pos - ship.pos).length()
                 if distance < (powerup.r + ship.r):
-                    # Aplica o efeito do power-up
                     if powerup.type == "triple_shot":
                         ship.triple_shot_active = True
                         ship.triple_shot_timer = C.TRIPLE_SHOOT_DURATION
-                        result.events.append("powerup_collected")
-                    elif powerup.type == "time_stop":          # NOVO
-                        result.time_stop_activated = True      # NOVO
-                        result.events.append("powerup_collected") # NOVO
-                    
-                    # Remove o power-up após ser coletado
+                    elif powerup.type == "time_stop":          
+                        result.time_stop_activated = True      
+                    elif powerup.type == "extra_life":
+                        result.extra_life_pickups.append(ship.player_id)
+
+                    result.events.append("powerup_collected")
                     powerup.kill()
