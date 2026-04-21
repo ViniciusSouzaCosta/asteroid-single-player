@@ -147,14 +147,12 @@ class Ship(pg.sprite.Sprite):
             left_pos = self.pos + left_dir * (self.r + C.BULLET_SPAWN_OFFSET)
             left_vel = self.vel + left_dir * C.SHIP_BULLET_SPEED
             bullet_left = Bullet(self.player_id, left_pos, left_vel, ttl=C.BULLET_TTL)
-            bullets.add(bullet_left)
             
             # Projétil direito
             right_dir = rotate_vec(dirv, C.TRIPLE_SHOOT_SPREAD)
             right_pos = self.pos + right_dir * (self.r + C.BULLET_SPAWN_OFFSET)
             right_vel = self.vel + right_dir * C.SHIP_BULLET_SPEED
             bullet_right = Bullet(self.player_id, right_pos, right_vel, ttl=C.BULLET_TTL)
-            bullets.add(bullet_right)
             return bullet, bullet_left, bullet_right
 
         return bullet
