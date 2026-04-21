@@ -5,6 +5,7 @@ import pygame as pg
 from core import config as C
 from core.entities import Asteroid, Bullet, Ship, UFO
 from core.scene import SceneState
+from core.entities import Asteroid, Bullet, Ship, UFO, BlackHole
 
 
 class Renderer:
@@ -27,6 +28,7 @@ class Renderer:
             Asteroid: self._draw_asteroid,
             Ship: self._draw_ship,
             UFO: self._draw_ufo,
+            BlackHole: self._draw_black_hole,
         }
 
     def clear(self) -> None:
@@ -139,3 +141,16 @@ class Renderer:
         cup = pg.Rect(0, 0, int(width * 0.5), int(height * 0.7))
         cup.center = (int(ufo.pos.x), int(ufo.pos.y - height * 0.3))
         pg.draw.ellipse(self.screen, self.config.WHITE, cup, width=1)
+
+
+    def _draw_black_hole(self, black_hole: BlackHole) -> None:
+        center = (int(black_hole.pos.x), int(black_hole.pos.y))
+
+        # Aura visual
+        pg.draw.circle(self.screen, self.config.PURPLE, center, black_hole.visual_r)
+        # Anel interno
+        pg.draw.circle(
+            self.screen, self.config.VIOLET, center, black_hole.visual_r - 4, width=2
+        )
+         # O buraco negro em si (centro)
+        pg.draw.circle(self.screen, self.config.BLACK, center, black_hole.r)
