@@ -246,6 +246,10 @@ class World:
         for pos, powerup_type in result.powerups_to_spawn:
             self.spawn_powerup(pos, powerup_type)
 
+        for player_id in result.extra_life_pickups:
+            if player_id in self.lives:
+                self.lives[player_id] += 1
+
         for player_id in result.ship_deaths:
             ship = self.get_ship(player_id)
             if ship is not None:
