@@ -24,6 +24,17 @@ HYPERSPACE_COST = 250
 SHIP_NOSE_ANGLE = 140.0
 SHIP_NOSE_SCALE = 0.9
 BULLET_SPAWN_OFFSET = 6
+TRIPLE_SHOOT_DURATION = 5.0
+TRIPLE_SHOOT_SPREAD = 15
+
+POWERUP_CHANCE = 1.0  # 30% de chance de dropar um power-up
+POWERUP_RADIUS = 12
+POWERUP_SPEED = 40.0
+POWERUP_TTL = 8.0  # Tempo de vida do power-up antes de desaparecer
+POWERUP_TYPES = {
+    "triple_shot": {"color": (0, 255, 0)},  # Verde
+    # Próximo powerup
+}
 
 AST_VEL_MIN = 30.0
 AST_VEL_MAX = 90.0
