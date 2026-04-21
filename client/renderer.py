@@ -3,9 +3,8 @@
 import pygame as pg
 
 from core import config as C
-from core.entities import Asteroid, Bullet, Ship, UFO
 from core.scene import SceneState
-from core.entities import Asteroid, Bullet, Ship, UFO, BlackHole
+from core.entities import Asteroid, Bullet, Ship, UFO, BlackHole, PowerUp
 
 
 class Renderer:
@@ -29,6 +28,7 @@ class Renderer:
             Ship: self._draw_ship,
             UFO: self._draw_ufo,
             BlackHole: self._draw_black_hole,
+            PowerUp: self._draw_powerup,
         }
 
     def clear(self) -> None:
@@ -142,7 +142,6 @@ class Renderer:
         cup.center = (int(ufo.pos.x), int(ufo.pos.y - height * 0.3))
         pg.draw.ellipse(self.screen, self.config.WHITE, cup, width=1)
 
-
     def _draw_black_hole(self, black_hole: BlackHole) -> None:
         center = (int(black_hole.pos.x), int(black_hole.pos.y))
 
@@ -154,3 +153,20 @@ class Renderer:
         )
          # O buraco negro em si (centro)
         pg.draw.circle(self.screen, self.config.BLACK, center, black_hole.r)
+
+    def _draw_powerup(self, powerup) -> None:
+        """Desenha um power-up com efeito de piscar."""
+        if not powerup.visible:
+            return
+            
+        center = (int(powerup.pos.x), int(powerup.pos.y))
+        color = powerup.get_color()
+        
+        # Desenha o power-up principal
+        pg.draw.circle(self.screen, color, center, powerup.r)
+        
+        # Adiciona um brilho/borda branca
+        pg.draw.circle(self.screen, self.config.WHITE, center, powerup.r, width=2)
+        
+        # Efeito visual extra: um ponto brilhante no centro
+        pg.draw.circle(self.screen, self.config.WHITE, center, 3)

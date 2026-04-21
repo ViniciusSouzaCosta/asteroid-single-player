@@ -1,7 +1,7 @@
 """Collision detection and resolution."""
 
 from dataclasses import dataclass, field
-from random import uniform
+from random import uniform, random
 
 import pygame as pg
 
@@ -18,6 +18,7 @@ class CollisionResult:
     score_deltas: dict[PlayerId, int] = field(default_factory=dict)
     ship_deaths: list[PlayerId] = field(default_factory=list)
     asteroids_to_spawn: list[tuple[Vec, Vec, str]] = field(default_factory=list)
+    powerups_to_spawn: list[tuple[Vec, str]] = field(default_factory=list)
 
 
 class CollisionManager:
@@ -29,6 +30,7 @@ class CollisionManager:
         bullets: pg.sprite.Group,
         asteroids: pg.sprite.Group,
         ufos: pg.sprite.Group,
+        powerups: pg.sprite.Group,
     ) -> CollisionResult:
         result = CollisionResult()
         self._bullets_vs_asteroids(bullets, asteroids, result)
@@ -36,6 +38,7 @@ class CollisionManager:
         self._ufo_vs_asteroids(ufos, asteroids, result)
         self._ship_vs_asteroids(ships, asteroids, result)
         self._ship_vs_ufo_bullets(ships, bullets, result)
+        self._ship_powerup(ships, powerups, result)
         return result
 
     def _bullets_vs_asteroids(
@@ -155,6 +158,10 @@ class CollisionManager:
                 + C.AST_SIZES[ast.size]["score"]
             )
 
+        if ast.size == "L" and random() <= C.POWERUP_CHANCE:
+            # Por enquanto, só temos o power-up de tiro triplo
+            result.powerups_to_spawn.append((Vec(ast.pos), "triple_shot"))
+
         split = C.AST_SIZES[ast.size]["split"]
         pos = Vec(ast.pos)
         ast.kill()
@@ -165,3 +172,24 @@ class CollisionManager:
             dirv = rand_unit_vec()
             speed = uniform(C.AST_VEL_MIN, C.AST_VEL_MAX) * C.AST_SPLIT_SPEED_MULT
             result.asteroids_to_spawn.append((pos, dirv * speed, new_size))
+
+    def _ship_powerup(
+        self,
+        ships: dict[PlayerId, Ship],
+        powerups: pg.sprite.Group,
+        result: CollisionResult,
+    ) -> None:
+        """Detecta quando uma nave coleta um power-up."""
+        for ship in ships.values():
+            for powerup in list(powerups):
+                # Verifica colisão entre a nave e o power-up
+                distance = (powerup.pos - ship.pos).length()
+                if distance < (powerup.r + ship.r):
+                    # Aplica o efeito do power-up
+                    if powerup.type == "triple_shot":
+                        ship.triple_shot_active = True
+                        ship.triple_shot_timer = C.TRIPLE_SHOOT_DURATION
+                        result.events.append("powerup_collected")
+                    
+                    # Remove o power-up após ser coletado
+                    powerup.kill()

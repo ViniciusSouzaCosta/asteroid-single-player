@@ -94,6 +94,10 @@ class Ship(pg.sprite.Sprite):
         self.invuln = 0.0
         self.r = int(C.SHIP_RADIUS)
         self.rect = pg.Rect(0, 0, self.r * 2, self.r * 2)
+        self.triple_shot_active = False
+        self.triple_shot_timer = 0
+        self.triple_shot_duration = C.TRIPLE_SHOOT_DURATION
+
 
     def apply_command(
         self,
@@ -125,6 +129,8 @@ class Ship(pg.sprite.Sprite):
             if getattr(bullet, "owner_id", None) == self.player_id:
                 count += 1
 
+        
+
         if count >= C.MAX_BULLETS_PER_PLAYER:
             return None
 
@@ -133,7 +139,23 @@ class Ship(pg.sprite.Sprite):
         vel = self.vel + dirv * C.SHIP_BULLET_SPEED
 
         self.cool = float(C.SHIP_FIRE_RATE)
-        return Bullet(self.player_id, pos, vel, ttl=C.BULLET_TTL)
+        bullet = Bullet(self.player_id, pos, vel, ttl=C.BULLET_TTL)
+
+        if self.triple_shot_active:
+            # Projétil esquerdo
+            left_dir = rotate_vec(dirv, -C.TRIPLE_SHOOT_SPREAD)
+            left_pos = self.pos + left_dir * (self.r + C.BULLET_SPAWN_OFFSET)
+            left_vel = self.vel + left_dir * C.SHIP_BULLET_SPEED
+            bullet_left = Bullet(self.player_id, left_pos, left_vel, ttl=C.BULLET_TTL)
+            
+            # Projétil direito
+            right_dir = rotate_vec(dirv, C.TRIPLE_SHOOT_SPREAD)
+            right_pos = self.pos + right_dir * (self.r + C.BULLET_SPAWN_OFFSET)
+            right_vel = self.vel + right_dir * C.SHIP_BULLET_SPEED
+            bullet_right = Bullet(self.player_id, right_pos, right_vel, ttl=C.BULLET_TTL)
+            return bullet, bullet_left, bullet_right
+
+        return bullet
 
     def hyperspace(self) -> None:
         self.pos = Vec(uniform(0, C.WIDTH), uniform(0, C.HEIGHT))
@@ -150,6 +172,12 @@ class Ship(pg.sprite.Sprite):
             self.invuln -= dt
             if self.invuln < 0.0:
                 self.invuln = 0.0
+
+        if self.triple_shot_active:
+            self.triple_shot_timer -= dt
+            if self.triple_shot_timer < 0.0:
+                self.triple_shot_active = False
+                self.triple_shot_timer = 0.0
 
         self.pos += self.vel * dt
         self.pos = wrap_pos(self.pos)
@@ -314,6 +342,58 @@ class UFO(pg.sprite.Sprite):
 
         return Bullet(UFO_BULLET_OWNER, self.pos, vel, ttl=ttl)
     
+
+class PowerUp(pg.sprite.Sprite):
+    # Power-up que concede habilidades temporárias à nave.
+    
+    def __init__(self, pos: Vec, powerup_type: str) -> None:
+        super().__init__()
+        self.pos = Vec(pos)
+        self.type = powerup_type
+        self.r = int(C.POWERUP_RADIUS)
+        
+        # Velocidade aleatória para o power-up flutuar
+        ang = uniform(0, 360)
+        speed = C.POWERUP_SPEED
+        self.vel = Vec(
+            math.cos(math.radians(ang)) * speed,
+            math.sin(math.radians(ang)) * speed
+        )
+        
+        self.ttl = float(C.POWERUP_TTL)
+        self.rect = pg.Rect(0, 0, self.r * 2, self.r * 2)
+        
+        # Efeito visual: piscar quando estiver prestes a expirar
+        self.blink_timer = 0.0
+        self.visible = True
+    
+    def update(self, dt: float) -> None:
+        """Atualiza posição e tempo de vida do power-up."""
+        self.pos += self.vel * dt
+        self.pos = wrap_pos(self.pos)
+        
+        self.ttl -= dt
+        
+        # Efeito de piscar nos últimos 2 segundos
+        if self.ttl <= 2.0:
+            self.blink_timer += dt
+            if self.blink_timer >= 0.15:  # Pisca a cada 0.15 segundos
+                self.visible = not self.visible
+                self.blink_timer = 0.0
+        else:
+            self.visible = True
+        
+        if self.ttl <= 0.0:
+            self.kill()
+            return
+            
+        self.rect.center = (int(self.pos.x), int(self.pos.y))
+    
+    def get_color(self) -> tuple[int, int, int]:
+        """Retorna a cor do power-up baseado no tipo."""
+        return C.POWERUP_TYPES.get(self.type, {}).get("color", (255, 255, 255))
+
+
 class BlackHole(pg.sprite.Sprite):
     def __init__(self, pos: Vec):
         super().__init__()

@@ -9,7 +9,7 @@ import pygame as pg
 from core import config as C
 from core.collisions import CollisionManager
 from core.commands import PlayerCommand
-from core.entities import Asteroid, Ship, UFO, BlackHole
+from core.entities import Asteroid, Ship, UFO, BlackHole, PowerUp
 from core.utils import Vec, rand_edge_pos
 
 PlayerId = int
@@ -28,6 +28,7 @@ class World:
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
         self.ufos = pg.sprite.Group()
+        self.powerups = pg.sprite.Group()
         self.black_hole = None
         # self.bh_timer = uniform(C.BH_TIMER_MIN, C.BH_TIMER_MAX)
         self.bh_timer = 0
@@ -230,6 +231,7 @@ class World:
             self.bullets,
             self.asteroids,
             self.ufos,
+            self.powerups,
         )
 
         self.events.extend(result.events)
@@ -240,6 +242,9 @@ class World:
 
         for pos, vel, size in result.asteroids_to_spawn:
             self.spawn_asteroid(pos, vel, size)
+
+        for pos, powerup_type in result.powerups_to_spawn:
+            self.spawn_powerup(pos, powerup_type)
 
         for player_id in result.ship_deaths:
             ship = self.get_ship(player_id)
@@ -257,3 +262,9 @@ class World:
         self.events.append("ship_explosion")
         if all(v <= 0 for v in self.lives.values()):
             self.game_over = True
+
+    def spawn_powerup(self, pos: Vec, powerup_type: str) -> None:
+        """Cria um novo power-up no mundo."""
+        powerup = PowerUp(pos, powerup_type)
+        self.powerups.add(powerup)
+        self.all_sprites.add(powerup)
