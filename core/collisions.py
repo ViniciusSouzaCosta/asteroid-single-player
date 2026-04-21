@@ -1,7 +1,7 @@
 """Collision detection and resolution."""
 
 from dataclasses import dataclass, field
-from random import uniform, random
+from random import uniform, random, choice
 
 import pygame as pg
 
@@ -19,6 +19,7 @@ class CollisionResult:
     ship_deaths: list[PlayerId] = field(default_factory=list)
     asteroids_to_spawn: list[tuple[Vec, Vec, str]] = field(default_factory=list)
     powerups_to_spawn: list[tuple[Vec, str]] = field(default_factory=list)
+    time_stop_activated: bool = False
 
 
 class CollisionManager:
@@ -159,8 +160,9 @@ class CollisionManager:
             )
 
         if ast.size == "L" and random() <= C.POWERUP_CHANCE:
-            # Por enquanto, só temos o power-up de tiro triplo
-            result.powerups_to_spawn.append((Vec(ast.pos), "triple_shot"))
+            """Randomizes which powerup will be dropped"""
+            powerup_tipo = choice(["triple_shot", "time_stop"])
+            result.powerups_to_spawn.append((Vec(ast.pos), powerup_tipo))
 
         split = C.AST_SIZES[ast.size]["split"]
         pos = Vec(ast.pos)
@@ -190,6 +192,9 @@ class CollisionManager:
                         ship.triple_shot_active = True
                         ship.triple_shot_timer = C.TRIPLE_SHOOT_DURATION
                         result.events.append("powerup_collected")
+                    elif powerup.type == "time_stop":          # NOVO
+                        result.time_stop_activated = True      # NOVO
+                        result.events.append("powerup_collected") # NOVO
                     
                     # Remove o power-up após ser coletado
                     powerup.kill()

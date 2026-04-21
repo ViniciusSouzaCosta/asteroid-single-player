@@ -47,6 +47,8 @@ class Renderer:
         lives: int,
         wave: int,
         state: SceneState,
+        triple_shot_timer: float = 0.0,
+        time_stop_timer: float = 0.0,
     ) -> None:
         if state != SceneState.PLAY:
             return
@@ -54,6 +56,31 @@ class Renderer:
         text = f"SCORE {score:06d}   LIVES {lives}   WAVE {wave}"
         label = self.font.render(text, True, self.config.WHITE)
         self.screen.blit(label, (10, 10))
+
+        # Powerup Time Bars
+        y_offset = 40 
+        bar_w = 150
+        bar_h = 12
+
+        if triple_shot_timer > 0:
+            pct = max(0.0, triple_shot_timer / self.config.TRIPLE_SHOOT_DURATION)
+            
+            pg.draw.rect(self.screen, self.config.GRAY, (10, y_offset, bar_w, bar_h))
+            pg.draw.rect(self.screen, (0, 255, 0), (10, y_offset, int(bar_w * pct), bar_h))
+            
+            lbl = self.font.render(f"TRIPLE SHOT {triple_shot_timer:.1f}s", True, self.config.WHITE)
+            self.screen.blit(lbl, (bar_w + 20, y_offset - 4))
+            y_offset += 25
+
+        if time_stop_timer > 0:
+            max_time = getattr(self.config, 'TIME_STOP_DURATION', 4.0)
+            pct = max(0.0, time_stop_timer / max_time)
+            
+            pg.draw.rect(self.screen, self.config.GRAY, (10, y_offset, bar_w, bar_h))
+            pg.draw.rect(self.screen, (0, 255, 255), (10, y_offset, int(bar_w * pct), bar_h))
+            
+            lbl = self.font.render(f"TIME STOP {time_stop_timer:.1f}s", True, self.config.WHITE)
+            self.screen.blit(lbl, (bar_w + 20, y_offset - 4))
 
     def draw_menu(self) -> None:
         self._draw_text(
