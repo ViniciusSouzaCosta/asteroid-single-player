@@ -9,7 +9,7 @@ import pygame as pg
 from core import config as C
 from core.collisions import CollisionManager
 from core.commands import PlayerCommand
-from core.entities import Asteroid, Ship, UFO
+from core.entities import Asteroid, Ship, UFO, BlackHole
 from core.utils import Vec, rand_edge_pos
 
 PlayerId = int
@@ -28,6 +28,11 @@ class World:
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
         self.ufos = pg.sprite.Group()
+        self.black_hole = None
+        # self.bh_timer = uniform(C.BH_TIMER_MIN, C.BH_TIMER_MAX)
+        self.bh_timer = 0
+
+        self.bh_duration = 0
         self.all_sprites = pg.sprite.Group()
 
         self.scores: Dict[PlayerId, int] = {}
@@ -72,8 +77,7 @@ class World:
         for _ in range(count):
             pos = rand_edge_pos()
             while any(
-                (pos - sp).length() < C.AST_MIN_SPAWN_DIST
-                for sp in ship_positions
+                (pos - sp).length() < C.AST_MIN_SPAWN_DIST for sp in ship_positions
             ):
                 pos = rand_edge_pos()
 
@@ -96,6 +100,21 @@ class World:
 
         self.all_sprites.add(ufo)
 
+    def spawn_black_hole(self):
+        pos = Vec(uniform(0, C.WIDTH), uniform(0, C.HEIGHT))
+
+        # Pega a posição de todas as naves ativas no dicionário
+        ship_positions = [s.pos for s in self.ships.values()]
+
+        # Garante que o buraco negro não nasça perto de NENHUMA nave
+        while any((pos - sp).length() < 200 for sp in ship_positions):
+            pos = Vec(uniform(0, C.WIDTH), uniform(0, C.HEIGHT))
+
+        bh = BlackHole(pos)
+        self.black_hole = bh
+        self.all_sprites.add(bh)
+        self.bh_duration = uniform(C.BH_DURATION_MIN, C.BH_DURATION_MAX)
+
     def update(
         self,
         dt: float,
@@ -113,6 +132,32 @@ class World:
         self._update_timers(dt)
         self._handle_collisions()
         self._maybe_start_next_wave(dt)
+
+        # spawn do buraco negro
+        if self.black_hole:
+            self.bh_duration -= dt
+            if self.bh_duration <= 0:
+                self.black_hole.kill()
+                self.black_hole = None
+                self.bh_timer = uniform(10, 20)
+        else:
+            self.bh_timer -= dt
+            if self.bh_timer <= 0:
+                self.spawn_black_hole()
+
+        # efeito de gravidade do buraco negro
+        if self.black_hole:
+            # Aplica a gravidade em TODAS as naves
+            for ship in self.ships.values():
+                dir_vec = self.black_hole.pos - ship.pos
+                dist = dir_vec.length()
+
+                if dist > 0:
+                    dir_vec = dir_vec.normalize()
+                    force = self.black_hole.strength / (
+                        dist + 1
+                    )  # diminui com a distancia
+                    ship.vel += dir_vec * force * dt * 50
 
     def _apply_commands(
         self,
@@ -181,7 +226,10 @@ class World:
 
     def _handle_collisions(self) -> None:
         result = self._collision_mgr.resolve(
-            self.ships, self.bullets, self.asteroids, self.ufos,
+            self.ships,
+            self.bullets,
+            self.asteroids,
+            self.ufos,
         )
 
         self.events.extend(result.events)

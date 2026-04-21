@@ -313,3 +313,31 @@ class UFO(pg.sprite.Sprite):
         self.cool = float(rate)
 
         return Bullet(UFO_BULLET_OWNER, self.pos, vel, ttl=ttl)
+    
+class BlackHole(pg.sprite.Sprite):
+    def __init__(self, pos: Vec):
+        super().__init__()
+        self.pos = Vec(pos)
+        self.r = int(C.BLACK_HOLE_RADIUS)  # raio que mata
+        self.visual_r = int(C.BLACK_HOLE_VISUAL_RADIUS)  # raio visual
+        self.strength = float(C.BLACK_HOLE_STRENGTH)
+        
+        # 1. Cria uma "tela" invisível (Surface) do tamanho exato do buraco negro
+        size = self.visual_r * 2
+        self.image = pg.Surface((size, size), pg.SRCALPHA)
+        
+        # 2. Desenha os círculos DENTRO dessa tela invisível.
+        # O centro de desenho agora é o meio dessa nova tela, e não a posição no mundo
+        center = (self.visual_r, self.visual_r)
+        pg.draw.circle(self.image, C.PURPLE, center, self.visual_r) # aura
+        pg.draw.circle(self.image, C.VIOLET, center, self.visual_r - 4, 2) # anel
+        pg.draw.circle(self.image, C.BLACK, center, self.r) # centro
+
+        # 3. Pega o retângulo dessa imagem e posiciona no mundo
+        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+
+    def update(self, dt: float):
+        # O Pygame gerencia o self.image sozinho, só precisamos garantir que o rect acompanhe a pos
+        self.rect.center = (int(self.pos.x), int(self.pos.y))
+        
+    # Note que apagamos o método def draw() inteiro! Ele não é mais necessário.
