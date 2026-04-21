@@ -275,6 +275,20 @@ class World:
             if ship is not None:
                 self._ship_die(ship)
 
+        if self.black_hole:
+            # Verifica todas as naves que estão na partida
+            for player_id, ship in list(self.ships.items()):
+                # Se a nave acabou de nascer (está piscando), o buraco negro não mata
+                if ship.invuln > 0.0:
+                    continue
+                
+                # Calcula a distância do centro do buraco negro até o centro da nave
+                dist = (self.black_hole.pos - ship.pos).length()
+                
+                # Se a distância for menor que a soma dos raios, é Game Over (ou perde vida)
+                if dist < (self.black_hole.r + ship.r):
+                    self._ship_die(ship)
+
     def _ship_die(self, ship: Ship) -> None:
         pid = ship.player_id
         self.lives[pid] = self.lives[pid] - 1
