@@ -46,6 +46,7 @@ class World:
         self._collision_mgr = CollisionManager()
 
         self.game_over = False
+        self.time_stop_timer = 0.0
 
         self.spawn_player(C.LOCAL_PLAYER_ID)
 
@@ -127,6 +128,22 @@ class World:
             return
 
         self._apply_commands(dt, commands_by_player_id)
+
+        # Update loop while Time Stop is activated
+        if self.time_stop_timer > 0:
+            self.time_stop_timer -= dt
+            
+            # Updates Ship, Bullets and Powerups
+            for ship in self.ships.values():
+                ship.update(dt)
+            for bullet in self.bullets:
+                if bullet.owner_id > 0:
+                    bullet.update(dt)
+            self.powerups.update(dt)
+            
+            self._handle_collisions()
+            return # Skips OVNIs, Black Holes, Asteroids and Wave Spawns
+
         self.all_sprites.update(dt)
 
         self._update_ufos(dt)
@@ -233,6 +250,9 @@ class World:
             self.ufos,
             self.powerups,
         )
+
+        if getattr(result, 'time_stop_activated', False):
+            self.time_stop_timer = float(C.TIME_STOP_DURATION)
 
         self.events.extend(result.events)
 
