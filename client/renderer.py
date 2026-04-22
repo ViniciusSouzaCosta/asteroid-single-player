@@ -49,6 +49,7 @@ class Renderer:
         state: SceneState,
         triple_shot_timer: float = 0.0,
         time_stop_timer: float = 0.0,
+        shield_timer: float = 0.0,
     ) -> None:
         if state != SceneState.PLAY:
             return
@@ -80,6 +81,16 @@ class Renderer:
             pg.draw.rect(self.screen, (0, 255, 255), (10, y_offset, int(bar_w * pct), bar_h))
             
             lbl = self.font.render(f"TIME STOP {time_stop_timer:.1f}s", True, self.config.WHITE)
+            self.screen.blit(lbl, (bar_w + 20, y_offset - 4))
+
+        if shield_timer > 0:
+            max_time = getattr(self.config, 'SHIELD_DURATION', 3.0)
+            pct = max(0.0, shield_timer / max_time)
+            
+            pg.draw.rect(self.screen, self.config.GRAY, (10, y_offset, bar_w, bar_h))
+            pg.draw.rect(self.screen, (135, 206, 250), (10, y_offset, int(bar_w * pct), bar_h))
+            
+            lbl = self.font.render(f"SHIELD {shield_timer:.1f}s", True, self.config.WHITE)
             self.screen.blit(lbl, (bar_w + 20, y_offset - 4))
 
     def draw_menu(self) -> None:
@@ -146,6 +157,26 @@ class Renderer:
             (int(p3.x), int(p3.y)),
         ]
         pg.draw.polygon(self.screen, self.config.WHITE, points, width=1)
+
+        if ship.shield_active:
+            center = (int(ship.pos.x), int(ship.pos.y))
+            # Círculo do escudo (semi-transparente seria ideal, mas pygame básico não suporta bem)
+            pg.draw.circle(
+                self.screen,
+                (135, 206, 250),  # Azul claro
+                center,
+                ship.r + 8,
+                width=2,
+            )
+            # Efeito de pulsação baseado no timer
+            if int(ship.shield_timer * 5) % 2 == 0:
+                pg.draw.circle(
+                    self.screen,
+                    (0, 0, 255),
+                    center,
+                    ship.r + 12,
+                    width=1,
+                )
 
         if ship.invuln > 0.0 and int(ship.invuln * 10) % 2 == 0:
             center = (int(ship.pos.x), int(ship.pos.y))

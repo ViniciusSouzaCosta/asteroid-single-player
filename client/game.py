@@ -115,6 +115,7 @@ class Game:
         ship = self.world.get_ship(C.LOCAL_PLAYER_ID)
         ts_timer = ship.triple_shot_timer if ship and getattr(ship, 'triple_shot_active', False) else 0.0
         time_stop_timer = getattr(self.world, 'time_stop_timer', 0.0)
+        shield_timer = ship.shield_timer if ship and getattr(ship, 'shield_active', False) else 0.0
 
         self.renderer.draw_hud(
             self.world.scores.get(C.LOCAL_PLAYER_ID, 0),
@@ -122,7 +123,8 @@ class Game:
             self.world.wave,
             self.scene,
             ts_timer,
-            time_stop_timer
+            time_stop_timer,
+            shield_timer,
         )
         pg.display.flip()
 
