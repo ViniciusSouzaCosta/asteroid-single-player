@@ -119,7 +119,7 @@ class CollisionManager:
         result: CollisionResult,
     ) -> None:
         for ship in ships.values():
-            if ship.invuln > 0.0:
+            if ship.invuln > 0.0 or ship.shield_active:
                 continue
             for ast in asteroids:
                 if (ast.pos - ship.pos).length() < (ast.r + ship.r):
@@ -133,7 +133,7 @@ class CollisionManager:
         result: CollisionResult,
     ) -> None:
         for ship in ships.values():
-            if ship.invuln > 0.0:
+            if ship.invuln > 0.0 or ship.shield_active:
                 continue
             for bullet in list(bullets):
                 if bullet.owner_id != UFO_BULLET_OWNER:
@@ -161,7 +161,7 @@ class CollisionManager:
 
         if ast.size == "L" and random() <= C.POWERUP_CHANCE:
             """Randomizes which powerup will be dropped"""
-            powerup_type = choice(["triple_shot", "time_stop", "extra_life"])
+            powerup_type = choice(["triple_shot", "time_stop", "extra_life", "shield"])
             result.powerups_to_spawn.append((Vec(ast.pos), powerup_type))
 
         split = C.AST_SIZES[ast.size]["split"]
@@ -193,6 +193,9 @@ class CollisionManager:
                         result.time_stop_activated = True      
                     elif powerup.type == "extra_life":
                         result.extra_life_pickups.append(ship.player_id)
+                    elif powerup.type == "shield":
+                        ship.shield_active = True
+                        ship.shield_timer = C.SHIELD_DURATION
 
                     result.events.append("powerup_collected")
                     powerup.kill()

@@ -27,15 +27,17 @@ BULLET_SPAWN_OFFSET = 6
 TRIPLE_SHOOT_DURATION = 5.0
 TRIPLE_SHOOT_SPREAD = 15
 TIME_STOP_DURATION = 4.0
+SHIELD_DURATION = 3.0
 
-POWERUP_CHANCE = 1.0  # 30% de chance de dropar um power-up
+POWERUP_CHANCE = 0.3  # 30% de chance de dropar um power-up
 POWERUP_RADIUS = 12
 POWERUP_SPEED = 40.0
 POWERUP_TTL = 8.0  # Tempo de vida do power-up antes de desaparecer
 POWERUP_TYPES = {
     "triple_shot": {"color": (0, 255, 0)},  # Verde
     "time_stop": {"color": (0, 255, 255)},  # Ciano  
-    "extra_life": {"color": (255, 215, 0)},
+    "extra_life": {"color": (255, 215, 0)}, # Dourado
+    "shield": {"color": (0, 0, 255)},     # Azul claro
 }
 
 AST_VEL_MIN = 30.0

@@ -94,9 +94,16 @@ class Ship(pg.sprite.Sprite):
         self.invuln = 0.0
         self.r = int(C.SHIP_RADIUS)
         self.rect = pg.Rect(0, 0, self.r * 2, self.r * 2)
+
+        # Triple shot
         self.triple_shot_active = False
         self.triple_shot_timer = 0
         self.triple_shot_duration = C.TRIPLE_SHOOT_DURATION
+
+        # Escudo
+        self.shield_active = False
+        self.shield_timer = 0.0
+        self.shield_duration = C.SHIELD_DURATION
 
 
     def apply_command(
@@ -178,6 +185,12 @@ class Ship(pg.sprite.Sprite):
             if self.triple_shot_timer < 0.0:
                 self.triple_shot_active = False
                 self.triple_shot_timer = 0.0
+
+        if self.shield_active:
+            self.shield_timer -= dt
+            if self.shield_timer <= 0.0:
+                self.shield_active = False
+                self.shield_timer = 0.0
 
         self.pos += self.vel * dt
         self.pos = wrap_pos(self.pos)

@@ -279,7 +279,7 @@ class World:
             # Verifica todas as naves que estão na partida
             for player_id, ship in list(self.ships.items()):
                 # Se a nave acabou de nascer (está piscando), o buraco negro não mata
-                if ship.invuln > 0.0:
+                if ship.invuln > 0.0 or ship.shield_active:
                     continue
                 
                 # Calcula a distância do centro do buraco negro até o centro da nave
